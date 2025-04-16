@@ -23,7 +23,7 @@ from wordcloud import WordCloud  # Text analytics
 
 ## 📊 Key Visualizations  
 ### 1. Research Topic Clusters  
-![t-SNE Plot](figures/tsne_clusters.png)  
+![t-SNE Plot](https://github.com/gacuervol/TopicModeling-NLP-RemoteSensing/blob/main/figures/t-SNE_Plot.png) 
 *3 distinct research clusters identified through dimensionality reduction*
 
 ### 2. Topic Modeling Results  
@@ -32,11 +32,11 @@ from wordcloud import WordCloud  # Text analytics
 lda = LatentDirichletAllocation(n_components=10, random_state=0)
 lda.fit(document_term_matrix)
 ```
-![LDA Visualization](figures/lda_interactive.png)  
+![LDA Visualization](https://github.com/gacuervol/TopicModeling-NLP-RemoteSensing/blob/main/figures/LDA_Visualization.png)  
 *Interactive exploration of topic-term relationships*
 
 ### 3. Word Frequency Analysis  
-![Word Cloud](figures/wordcloud.png)  
+![Word Cloud](https://github.com/gacuervol/TopicModeling-NLP-RemoteSensing/blob/main/figures/Word_Cloud.png)  
 *Most frequent terms in remote sensing literature*
 
 ## 🔍 Statistical Insights  
@@ -48,13 +48,20 @@ lda.fit(document_term_matrix)
 
 ## 📂 Repository Structure  
 ```text
+/Data
+├── abstract_pln.csv 
+├── abstract_pln_earth.csv 
 /Notebooks
-├── 1_Web_Scraping.ipynb       # Data collection
-├── 2_Topic_Modeling.ipynb     # Main analysis
+├── 1_business_data_load.ipynb       # Data collection
+├── 4_modeling.ipynb     # Main analysis
+├── Copia de Proyecto_final.ipynb   # Main analysis
+├── Practica_4_pipeline.ipynb.txt  # Main analysis
+├── Proyecto_Aplicado_PLN.ipynb  # Main analysis
+├── Proyecto_Modulo_4.ipynb  # Main analysis
 /figures
-├── lda_interactive.html       # Interactive visualization
-├── tsne_clusters.png          # Cluster analysis
-└── wordcloud.png              # Term frequency
+├── LDA_Visualization.png      # Interactive visualization
+├── Word_Cloud.png         # Cluster analysis
+└── t-SNE_Plot.png              # Term frequency
 ```
 
 ## 🚀 How to Use  
