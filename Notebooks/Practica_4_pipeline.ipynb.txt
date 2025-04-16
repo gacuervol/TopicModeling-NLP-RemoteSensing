@@ -1,0 +1,1643 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "8f3610fc"
+      },
+      "source": [
+        "# Clasificación de Texto\n",
+        "\n",
+        "Como vimos anteriormente, la **minería de texto** se puede abordar siguiendo las fases del siguiente **pipeline general**:\n",
+        "\n",
+        "1. **Preprocesamiento**.\n",
+        "2. **Análisis exploratorio de los datos** (EDA).\n",
+        "3. **Representación del texto**.\n",
+        "4. **Modelamiento**: en este paso, se selecciona un modelo matemático que permita clasificar/agrupar/describir los textos utilizando las representaciones obtenidas en el paso anterior.\n",
+        "5. **Validación y despliegue**: finalmente, se evalúa el desempeño del modelo para posteriormente utilizarlo en la práctica.\n",
+        "\n",
+        "<img src=\"https://res.cloudinary.com/dyd911kmh/image/upload/f_auto,q_auto:best/v1535125878/NLTK3_zwbdgg.png\" alt=\"model\" width=\"600\"/>\n",
+        "\n",
+        "En este notebbok, estudiaremos las fases finales de **modelamiento** y **validación**. En particular, en el modelamiento veremos cómo construir **modelos de clasificación de texto**. Esta es una tarea de **aprendizaje supervisado** dentro de las técnicas de *machine learning*: \n",
+        "\n",
+        "<img src=\"https://www.mathworks.com/help/stats/machinelearning_supervisedunsupervised.png\" width=\"600\">\n",
+        "\n",
+        "Para tener un poco de contexto en técnicas de *Machine Learning*:\n",
+        "\n",
+        "<img src=\"https://i.vas3k.ru/7vx.jpg\" alt=\"ML\" width=\"600\"/>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "4910843e"
+      },
+      "source": [
+        "\n",
+        "## Introducción: Análisis Supervisado de Texto\n",
+        "\n",
+        "En general, un problema de clasificación consiste en determinar los parámetros $w$ de un modelo $M$ por medio de un conjunto de datos $\\mathbf{X}=\\{\\vec{x_1},\\vec{x_2},\\dots,\\vec{x_N}\\}$ con sus respectivas etiquetas $Y=\\{y_1,y_2,\\dots,y_n\\}$. \n",
+        "\n",
+        "Por ejemplo, en el caso de un detector de spam para correo electrónico:\n",
+        "\n",
+        "<img src=\"https://developers.google.com/machine-learning/guides/text-classification/images/TextClassificationExample.png\" alt=\"spam\" width=\"600\"/>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "lines_to_next_cell": 2,
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "4a717af5",
+        "outputId": "374583e2-5bf4-466c-87b7-fafab64b7ec8"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "[nltk_data] Downloading collection 'popular'\n",
+            "[nltk_data]    | \n",
+            "[nltk_data]    | Downloading package cmudict to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/cmudict.zip.\n",
+            "[nltk_data]    | Downloading package gazetteers to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/gazetteers.zip.\n",
+            "[nltk_data]    | Downloading package genesis to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/genesis.zip.\n",
+            "[nltk_data]    | Downloading package gutenberg to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/gutenberg.zip.\n",
+            "[nltk_data]    | Downloading package inaugural to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/inaugural.zip.\n",
+            "[nltk_data]    | Downloading package movie_reviews to\n",
+            "[nltk_data]    |     /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/movie_reviews.zip.\n",
+            "[nltk_data]    | Downloading package names to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/names.zip.\n",
+            "[nltk_data]    | Downloading package shakespeare to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/shakespeare.zip.\n",
+            "[nltk_data]    | Downloading package stopwords to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/stopwords.zip.\n",
+            "[nltk_data]    | Downloading package treebank to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/treebank.zip.\n",
+            "[nltk_data]    | Downloading package twitter_samples to\n",
+            "[nltk_data]    |     /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/twitter_samples.zip.\n",
+            "[nltk_data]    | Downloading package omw to /root/nltk_data...\n",
+            "[nltk_data]    | Downloading package omw-1.4 to /root/nltk_data...\n",
+            "[nltk_data]    | Downloading package wordnet to /root/nltk_data...\n",
+            "[nltk_data]    | Downloading package wordnet2021 to /root/nltk_data...\n",
+            "[nltk_data]    | Downloading package wordnet31 to /root/nltk_data...\n",
+            "[nltk_data]    | Downloading package wordnet_ic to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/wordnet_ic.zip.\n",
+            "[nltk_data]    | Downloading package words to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping corpora/words.zip.\n",
+            "[nltk_data]    | Downloading package maxent_ne_chunker to\n",
+            "[nltk_data]    |     /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping chunkers/maxent_ne_chunker.zip.\n",
+            "[nltk_data]    | Downloading package punkt to /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping tokenizers/punkt.zip.\n",
+            "[nltk_data]    | Downloading package snowball_data to\n",
+            "[nltk_data]    |     /root/nltk_data...\n",
+            "[nltk_data]    | Downloading package averaged_perceptron_tagger to\n",
+            "[nltk_data]    |     /root/nltk_data...\n",
+            "[nltk_data]    |   Unzipping taggers/averaged_perceptron_tagger.zip.\n",
+            "[nltk_data]    | \n",
+            "[nltk_data]  Done downloading collection popular\n",
+            "[nltk_data] Downloading package wordnet to /root/nltk_data...\n",
+            "[nltk_data]   Package wordnet is already up-to-date!\n"
+          ]
+        },
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "True"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 1
+        }
+      ],
+      "source": [
+        "import nltk\n",
+        "import re\n",
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "from collections import Counter\n",
+        "from sklearn.feature_extraction.text import CountVectorizer\n",
+        "from sklearn.feature_extraction.text import TfidfVectorizer\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn import metrics \n",
+        "from sklearn.naive_bayes import MultinomialNB\n",
+        "from sklearn.linear_model import LogisticRegression\n",
+        "from sklearn.svm import SVC, LinearSVC\n",
+        "from sklearn.pipeline import Pipeline\n",
+        "import matplotlib.pyplot as plt \n",
+        "import seaborn as sns\n",
+        "plt.style.use(\"ggplot\")\n",
+        "nltk.download(\"popular\")\n",
+        "nltk.download(\"wordnet\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "c6f10e6f"
+      },
+      "source": [
+        "### Aplicaciones en texto\n",
+        "\n",
+        "* Categorías temáticas. \n",
+        "* Identificación de autor. \n",
+        "* Detección de spam.\n",
+        "* Análisis de sentimientos."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "d665de52"
+      },
+      "source": [
+        "### Ejemplo: Clasificación de spam\n",
+        "\n",
+        "A manera de aplicación de ejemplo, realizaremos **clasificación automática de spam**. Para ello utilizaremos un dataset con etiquetas de spam en mensajes de SMS. Este conjunto de datos se encuentra disponible en [línea](https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection).\n",
+        "\n",
+        "En este punto realizaremos las primeras fases de la minería de texto para preparar los datos para el modelamiento. Primero, cargamos el dataset como un dataframe de `pandas`:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 3,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 363
+        },
+        "id": "455d2e2c",
+        "outputId": "1da8bd1b-9732-49ff-96ae-2e310087a6ad"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "                                                text  label\n",
+              "0   date wed NUMBER aug NUMBER NUMBER NUMBER NUMB...      0\n",
+              "1  martin a posted tassos papadopoulos the greek ...      0\n",
+              "2  man threatens explosion in moscow thursday aug...      0\n",
+              "3  klez the virus that won t die already the most...      0\n",
+              "4   in adding cream to spaghetti carbonara which ...      0\n",
+              "5   i just had to jump in here as carbonara is on...      0\n",
+              "6  the scotsman NUMBER august NUMBER playboy want...      0\n",
+              "7  martin adamson wrote isn t it just basically a...      0\n",
+              "8  the scotsman thu NUMBER aug NUMBER meaningful ...      0\n",
+              "9  i have been trying to research via sa mirrors ...      0"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-00132bb8-2620-4ffd-b58a-a297df5d3cf2\">\n",
+              "    <div class=\"colab-df-container\">\n",
+              "      <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>text</th>\n",
+              "      <th>label</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>date wed NUMBER aug NUMBER NUMBER NUMBER NUMB...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>martin a posted tassos papadopoulos the greek ...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>man threatens explosion in moscow thursday aug...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>klez the virus that won t die already the most...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>in adding cream to spaghetti carbonara which ...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>5</th>\n",
+              "      <td>i just had to jump in here as carbonara is on...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>6</th>\n",
+              "      <td>the scotsman NUMBER august NUMBER playboy want...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>7</th>\n",
+              "      <td>martin adamson wrote isn t it just basically a...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>8</th>\n",
+              "      <td>the scotsman thu NUMBER aug NUMBER meaningful ...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>9</th>\n",
+              "      <td>i have been trying to research via sa mirrors ...</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "      <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-00132bb8-2620-4ffd-b58a-a297df5d3cf2')\"\n",
+              "              title=\"Convert this dataframe to an interactive table.\"\n",
+              "              style=\"display:none;\">\n",
+              "        \n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\"viewBox=\"0 0 24 24\"\n",
+              "       width=\"24px\">\n",
+              "    <path d=\"M0 0h24v24H0V0z\" fill=\"none\"/>\n",
+              "    <path d=\"M18.56 5.44l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94zm-11 1L8.5 8.5l.94-2.06 2.06-.94-2.06-.94L8.5 2.5l-.94 2.06-2.06.94zm10 10l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94z\"/><path d=\"M17.41 7.96l-1.37-1.37c-.4-.4-.92-.59-1.43-.59-.52 0-1.04.2-1.43.59L10.3 9.45l-7.72 7.72c-.78.78-.78 2.05 0 2.83L4 21.41c.39.39.9.59 1.41.59.51 0 1.02-.2 1.41-.59l7.78-7.78 2.81-2.81c.8-.78.8-2.07 0-2.86zM5.41 20L4 18.59l7.72-7.72 1.47 1.35L5.41 20z\"/>\n",
+              "  </svg>\n",
+              "      </button>\n",
+              "      \n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      flex-wrap:wrap;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "      <script>\n",
+              "        const buttonEl =\n",
+              "          document.querySelector('#df-00132bb8-2620-4ffd-b58a-a297df5d3cf2 button.colab-df-convert');\n",
+              "        buttonEl.style.display =\n",
+              "          google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "        async function convertToInteractive(key) {\n",
+              "          const element = document.querySelector('#df-00132bb8-2620-4ffd-b58a-a297df5d3cf2');\n",
+              "          const dataTable =\n",
+              "            await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                     [key], {});\n",
+              "          if (!dataTable) return;\n",
+              "\n",
+              "          const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "            '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "            + ' to learn more about interactive tables.';\n",
+              "          element.innerHTML = '';\n",
+              "          dataTable['output_type'] = 'display_data';\n",
+              "          await google.colab.output.renderOutput(dataTable, element);\n",
+              "          const docLink = document.createElement('div');\n",
+              "          docLink.innerHTML = docLinkHtml;\n",
+              "          element.appendChild(docLink);\n",
+              "        }\n",
+              "      </script>\n",
+              "    </div>\n",
+              "  </div>\n",
+              "  "
+            ]
+          },
+          "metadata": {},
+          "execution_count": 3
+        }
+      ],
+      "source": [
+        "df = pd.read_csv(\n",
+        "        \"spam.csv\",\n",
+        "        sep=\",\"\n",
+        "        )\n",
+        "\n",
+        "df.columns = [\n",
+        "    \"text\",\n",
+        "    \"label\"\n",
+        "    ]\n",
+        "df.head(10)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "5bb36005"
+      },
+      "source": [
+        "#### Análisis Exploratorio de los Datos\n",
+        "\n",
+        "Vamos a realizar una inspección general de este conjunto de datos:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 4,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "becbcccb",
+        "outputId": "eb6655b3-42e0-4283-fa88-273d632213bf"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "text     2999\n",
+              "label    3000\n",
+              "dtype: int64"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 4
+        }
+      ],
+      "source": [
+        "df.count()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "df2c2368"
+      },
+      "source": [
+        "Verificamos el número de valores vacíos:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 5,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "d38b6c91",
+        "outputId": "7574892a-058a-41a9-f1f4-8e38902b710f"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "text     1\n",
+            "label    0\n",
+            "dtype: int64\n"
+          ]
+        }
+      ],
+      "source": [
+        "print(df.isnull().sum())"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Borrar valores nulos"
+      ],
+      "metadata": {
+        "id": "HzuJdXymK2gx"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df = df.dropna()\n",
+        "\n",
+        "print(df.isnull().sum())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "II91xDf8LvMX",
+        "outputId": "81486a29-42b0-4bc4-8e1b-e68e7d27af0d"
+      },
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "text     0\n",
+            "label    0\n",
+            "dtype: int64\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "5400e9e3"
+      },
+      "source": [
+        "Veamos la cantidad de etiquetas por categoría:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 7,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "4480dc35",
+        "outputId": "e5e910b4-3ce1-4561-ab42-393d6e795ac9"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "0    2500\n",
+            "1     499\n",
+            "Name: label, dtype: int64\n"
+          ]
+        }
+      ],
+      "source": [
+        "print(df[\"label\"].value_counts())"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "62fff6d4"
+      },
+      "source": [
+        "Como podemos ver, se trata de un conjunto de datos con un desbalance bastante alto, es decir, debemos utilizar técnicas de machine learning para tratar con este problema."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "3767c969"
+      },
+      "source": [
+        "#### Preparación del Conjunto de Datos\n",
+        "\n",
+        "Vamos a añadir algunas columnas al conjunto de datos: longitud del SMS y cantidad de signos de puntuación. Con esto intentaremos clasificar más adelante."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 8,
+      "metadata": {
+        "lines_to_next_cell": 1,
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "a39152e0",
+        "outputId": "273d4875-1ff2-4016-f26c-f93aee2cc517"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "                                                text  label   len\n",
+              "0   date wed NUMBER aug NUMBER NUMBER NUMBER NUMB...      0  1522\n",
+              "1  martin a posted tassos papadopoulos the greek ...      0   643\n",
+              "2  man threatens explosion in moscow thursday aug...      0  1509\n",
+              "3  klez the virus that won t die already the most...      0  1015\n",
+              "4   in adding cream to spaghetti carbonara which ...      0   771"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-f9a8c314-c744-40ef-850c-c408f15ac88b\">\n",
+              "    <div class=\"colab-df-container\">\n",
+              "      <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>text</th>\n",
+              "      <th>label</th>\n",
+              "      <th>len</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>date wed NUMBER aug NUMBER NUMBER NUMBER NUMB...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1522</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>martin a posted tassos papadopoulos the greek ...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>643</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>man threatens explosion in moscow thursday aug...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1509</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>klez the virus that won t die already the most...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1015</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>in adding cream to spaghetti carbonara which ...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>771</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "      <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-f9a8c314-c744-40ef-850c-c408f15ac88b')\"\n",
+              "              title=\"Convert this dataframe to an interactive table.\"\n",
+              "              style=\"display:none;\">\n",
+              "        \n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\"viewBox=\"0 0 24 24\"\n",
+              "       width=\"24px\">\n",
+              "    <path d=\"M0 0h24v24H0V0z\" fill=\"none\"/>\n",
+              "    <path d=\"M18.56 5.44l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94zm-11 1L8.5 8.5l.94-2.06 2.06-.94-2.06-.94L8.5 2.5l-.94 2.06-2.06.94zm10 10l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94z\"/><path d=\"M17.41 7.96l-1.37-1.37c-.4-.4-.92-.59-1.43-.59-.52 0-1.04.2-1.43.59L10.3 9.45l-7.72 7.72c-.78.78-.78 2.05 0 2.83L4 21.41c.39.39.9.59 1.41.59.51 0 1.02-.2 1.41-.59l7.78-7.78 2.81-2.81c.8-.78.8-2.07 0-2.86zM5.41 20L4 18.59l7.72-7.72 1.47 1.35L5.41 20z\"/>\n",
+              "  </svg>\n",
+              "      </button>\n",
+              "      \n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      flex-wrap:wrap;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "      <script>\n",
+              "        const buttonEl =\n",
+              "          document.querySelector('#df-f9a8c314-c744-40ef-850c-c408f15ac88b button.colab-df-convert');\n",
+              "        buttonEl.style.display =\n",
+              "          google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "        async function convertToInteractive(key) {\n",
+              "          const element = document.querySelector('#df-f9a8c314-c744-40ef-850c-c408f15ac88b');\n",
+              "          const dataTable =\n",
+              "            await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                     [key], {});\n",
+              "          if (!dataTable) return;\n",
+              "\n",
+              "          const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "            '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "            + ' to learn more about interactive tables.';\n",
+              "          element.innerHTML = '';\n",
+              "          dataTable['output_type'] = 'display_data';\n",
+              "          await google.colab.output.renderOutput(dataTable, element);\n",
+              "          const docLink = document.createElement('div');\n",
+              "          docLink.innerHTML = docLinkHtml;\n",
+              "          element.appendChild(docLink);\n",
+              "        }\n",
+              "      </script>\n",
+              "    </div>\n",
+              "  </div>\n",
+              "  "
+            ]
+          },
+          "metadata": {},
+          "execution_count": 8
+        }
+      ],
+      "source": [
+        "df['len'] = df[\"text\"].apply(len)\n",
+        "df.head()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "a901312c"
+      },
+      "source": [
+        "De igual forma, creamos una función para contar los signos de puntuación"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 9,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "98afa5e9",
+        "outputId": "8bc238f6-377f-49d5-a332-2cd9b1cb5b23"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "                                                text  label   len  punkt\n",
+              "0   date wed NUMBER aug NUMBER NUMBER NUMBER NUMB...      0  1522     51\n",
+              "1  martin a posted tassos papadopoulos the greek ...      0   643      0\n",
+              "2  man threatens explosion in moscow thursday aug...      0  1509      0\n",
+              "3  klez the virus that won t die already the most...      0  1015     47\n",
+              "4   in adding cream to spaghetti carbonara which ...      0   771      0"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-b1f9d90e-caa8-42ab-91b7-37741cd9e93e\">\n",
+              "    <div class=\"colab-df-container\">\n",
+              "      <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>text</th>\n",
+              "      <th>label</th>\n",
+              "      <th>len</th>\n",
+              "      <th>punkt</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>date wed NUMBER aug NUMBER NUMBER NUMBER NUMB...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1522</td>\n",
+              "      <td>51</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>martin a posted tassos papadopoulos the greek ...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>643</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>man threatens explosion in moscow thursday aug...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1509</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>klez the virus that won t die already the most...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1015</td>\n",
+              "      <td>47</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>in adding cream to spaghetti carbonara which ...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>771</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "      <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-b1f9d90e-caa8-42ab-91b7-37741cd9e93e')\"\n",
+              "              title=\"Convert this dataframe to an interactive table.\"\n",
+              "              style=\"display:none;\">\n",
+              "        \n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\"viewBox=\"0 0 24 24\"\n",
+              "       width=\"24px\">\n",
+              "    <path d=\"M0 0h24v24H0V0z\" fill=\"none\"/>\n",
+              "    <path d=\"M18.56 5.44l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94zm-11 1L8.5 8.5l.94-2.06 2.06-.94-2.06-.94L8.5 2.5l-.94 2.06-2.06.94zm10 10l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94z\"/><path d=\"M17.41 7.96l-1.37-1.37c-.4-.4-.92-.59-1.43-.59-.52 0-1.04.2-1.43.59L10.3 9.45l-7.72 7.72c-.78.78-.78 2.05 0 2.83L4 21.41c.39.39.9.59 1.41.59.51 0 1.02-.2 1.41-.59l7.78-7.78 2.81-2.81c.8-.78.8-2.07 0-2.86zM5.41 20L4 18.59l7.72-7.72 1.47 1.35L5.41 20z\"/>\n",
+              "  </svg>\n",
+              "      </button>\n",
+              "      \n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      flex-wrap:wrap;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "      <script>\n",
+              "        const buttonEl =\n",
+              "          document.querySelector('#df-b1f9d90e-caa8-42ab-91b7-37741cd9e93e button.colab-df-convert');\n",
+              "        buttonEl.style.display =\n",
+              "          google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "        async function convertToInteractive(key) {\n",
+              "          const element = document.querySelector('#df-b1f9d90e-caa8-42ab-91b7-37741cd9e93e');\n",
+              "          const dataTable =\n",
+              "            await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                     [key], {});\n",
+              "          if (!dataTable) return;\n",
+              "\n",
+              "          const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "            '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "            + ' to learn more about interactive tables.';\n",
+              "          element.innerHTML = '';\n",
+              "          dataTable['output_type'] = 'display_data';\n",
+              "          await google.colab.output.renderOutput(dataTable, element);\n",
+              "          const docLink = document.createElement('div');\n",
+              "          docLink.innerHTML = docLinkHtml;\n",
+              "          element.appendChild(docLink);\n",
+              "        }\n",
+              "      </script>\n",
+              "    </div>\n",
+              "  </div>\n",
+              "  "
+            ]
+          },
+          "metadata": {},
+          "execution_count": 9
+        }
+      ],
+      "source": [
+        "def cont_punt(cadena):\n",
+        "    cont_punt = Counter(\n",
+        "            char\n",
+        "            for char in cadena\n",
+        "            if char in '!\"#$%&\\'()*+,-./:;<=>?@[\\\\]^_`{|}~'\n",
+        "            )\n",
+        "    return sum(cont_punt.values())\n",
+        "\n",
+        "df['punkt'] = df[\"text\"].apply(cont_punt)\n",
+        "df.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "corpus = df[\"text\"]\n",
+        "labels = df[\"label\"]"
+      ],
+      "metadata": {
+        "id": "5BuWYV6xFT2I"
+      },
+      "execution_count": 12,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "115757a3"
+      },
+      "source": [
+        "Imprimimos el corpus (los cinco primeros)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 13,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "4d252329",
+        "outputId": "705df963-60bf-4296-9f38-1bf365aae965"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "0     date wed NUMBER aug NUMBER NUMBER NUMBER NUMB...\n",
+              "1    martin a posted tassos papadopoulos the greek ...\n",
+              "2    man threatens explosion in moscow thursday aug...\n",
+              "3    klez the virus that won t die already the most...\n",
+              "4     in adding cream to spaghetti carbonara which ...\n",
+              "Name: text, dtype: object"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 13
+        }
+      ],
+      "source": [
+        "corpus[:5]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "4ec7678c"
+      },
+      "source": [
+        "Imprimimos las etiquetas (las cinco primeras)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 14,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "13872bd4",
+        "outputId": "5a03cb2a-2b3b-41e8-a360-09e94893f4a9"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "0    0\n",
+              "1    0\n",
+              "2    0\n",
+              "3    0\n",
+              "4    0\n",
+              "Name: label, dtype: int64"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 14
+        }
+      ],
+      "source": [
+        "labels[:5]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "18f31847"
+      },
+      "source": [
+        "Ahora, realizaremos el preprocesamiento de los textos con `nltk`:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 15,
+      "metadata": {
+        "lines_to_next_cell": 1,
+        "id": "d27d4e0a"
+      },
+      "outputs": [],
+      "source": [
+        "wpt = nltk.WordPunctTokenizer()\n",
+        "lem = nltk.WordNetLemmatizer()\n",
+        "sw = nltk.corpus.stopwords.words('english')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "e2f2ed09"
+      },
+      "source": [
+        "Definimos la función de preprocesamiento"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 16,
+      "metadata": {
+        "lines_to_next_cell": 1,
+        "id": "2a0c8693"
+      },
+      "outputs": [],
+      "source": [
+        "def preprocess(doc):\n",
+        "    doc = re.sub(r'[^a-zA-Z\\s]', '', doc, re.I|re.A)\n",
+        "    doc = doc.lower().strip()\n",
+        "    tokens = wpt.tokenize(doc)\n",
+        "    tokens = [\n",
+        "            lem.lemmatize(token)\n",
+        "            for token in tokens\n",
+        "            if token not in sw\n",
+        "            ]\n",
+        "    doc = ' '.join(tokens)\n",
+        "    return doc"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "380d6711"
+      },
+      "source": [
+        "Veamos el texto luego del preprocesamiento"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 18,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "1c2ac927",
+        "outputId": "a5059772-c705-445d-f77a-4c3f043846bf"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "['date wed number aug number number number number number chris garrigues cwg dated number numberfanumberd deepeddy com message id number number tmda deepeddy vircio com reproduce error repeatable like every time without fail debug log pick happening number number number pickit exec pick inbox list lbrace lbrace subject ftp rbrace rbrace number number sequence mercury number number number exec pick inbox list lbrace lbrace subject ftp rbrace rbrace number number sequence mercury number number number ftocpickmsgs number hit number number number marking number hit number number number tkerror syntax error expression int note run pick command hand delta pick inbox list lbrace lbrace subject ftp rbrace rbrace number number sequence mercury number hit number hit come obviously version nmh using delta pick version pick nmh number number number compiled url sun mar number number number number ict number relevant part mhprofile delta mhparam pick seq sel list since pick command work sequence actually one explicit command line search popup one come mhprofile get created kre p still using version code form day ago able reach cv repository today local routing issue think exmh worker mailing list exmh worker url url',\n",
+              " 'martin posted tasso papadopoulos greek sculptor behind plan judged limestone mount kerdylio number mile east salonika far mount athos monastic community ideal patriotic sculpture well alexander granite feature number ft high number ft wide museum restored amphitheatre car park admiring crowd planned mountain limestone granite limestone weather pretty fast yahoo group sponsor number dvd free p join url unsubscribe group send email forteana unsubscribe url use yahoo group subject url',\n",
+              " 'man threatens explosion moscow thursday august number number number number pm moscow ap security officer thursday seized unidentified man said armed explosive threatened blow truck front russia federal security service headquarters moscow ntv television reported officer seized automatic rifle man carrying man got truck taken custody ntv said detail immediately available man demanded talk high government official interfax itar ta news agency said ekho moskvy radio reported wanted talk russian president vladimir putin police security force rushed security service building within block kremlin red square bolshoi ballet surrounded man claimed one half ton explosive news agency said negotiation continued one half hour outside building itar ta interfax reported citing witness man later drove away building police escort drove street near moscow olympic penta hotel authority held negotiation moscow police press service said move appeared attempt security service get secure location yahoo group sponsor number dvd free p join url unsubscribe group send email forteana unsubscribe url use yahoo group subject url',\n",
+              " 'klez virus die already prolific virus ever klez continues wreak havoc andrew brandt september number issue pc world magazine posted thursday august number number klez worm approaching seventh month wriggling across web making one persistent virus ever expert warn may harbinger new virus use combination pernicious approach go pc pc antivirus software maker symantec mcafee report number new infection daily sign letup press time british security firm messagelabs estimate number every number e mail message hold variation klez virus say klez already surpassed last summer sircam prolific virus ever newer klez variant merely nuisance carry virus corrupt data url irregular mailing list irregular url url',\n",
+              " 'adding cream spaghetti carbonara effect pasta making pizza deep pie jump carbonara one favourite make ask hell supposed use instead cream never seen recipe used personally use low fat creme fraiche work quite nicely time seen supposedly authentic recipe carbonara identical mine cream egg lot fresh parmesan except creme fraiche stew stewart smith scottish microelectronics centre university edinburgh url yahoo group sponsor number dvd free p join url unsubscribe group send email forteana unsubscribe url use yahoo group subject url']"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 18
+        }
+      ],
+      "source": [
+        "norm_corpus = list(\n",
+        "        map(\n",
+        "            preprocess, corpus\n",
+        "            )\n",
+        "        )\n",
+        "norm_corpus[:5]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "6e0ca188"
+      },
+      "source": [
+        "#### Representación de los Textos \n",
+        "\n",
+        "Ahora, cada texto se representará como una bolsa de palabras:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 19,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "cedd9bce",
+        "outputId": "5827a02a-ea71-412a-8339-6b2bc0bd5364"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "<2999x30582 sparse matrix of type '<class 'numpy.int64'>'\n",
+              "\twith 254006 stored elements in Compressed Sparse Row format>"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 19
+        }
+      ],
+      "source": [
+        "vectorizer = CountVectorizer()\n",
+        "bow = vectorizer.fit_transform(norm_corpus)\n",
+        "bow"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "ec93836c"
+      },
+      "source": [
+        "También, vamos a usar la representación TF-IDF. Con la clase `TfidfVectorizer` podremos obtener la representación TF-IDF directamente del texto como se muestra a continuación:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 20,
+      "metadata": {
+        "id": "da4266a3"
+      },
+      "outputs": [],
+      "source": [
+        "tf_idf_vect = TfidfVectorizer(\n",
+        "        use_idf=True,\n",
+        "        sublinear_tf=True\n",
+        "        )"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "e62cd07d"
+      },
+      "source": [
+        "Entrenamos y extraemos características "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 21,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "c4555c7e",
+        "outputId": "aa0ec7a0-6c6d-4726-83ce-da4b3ed11212"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "<2999x30582 sparse matrix of type '<class 'numpy.float64'>'\n",
+              "\twith 254006 stored elements in Compressed Sparse Row format>"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 21
+        }
+      ],
+      "source": [
+        "tf_idf = tf_idf_vect.fit_transform(norm_corpus)\n",
+        "tf_idf"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "ab2e5c72"
+      },
+      "source": [
+        "**Realizamos la partición de los datos: 70%/30%.**\n",
+        "\n",
+        "Nótese que estamos usando un parámetro ``random_state=0`` para inicializar una semilla para asegurarnos que todos obtengamos los mismos resultados."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "99434810"
+      },
+      "source": [
+        "Estas son las variables que le pasaremos a nuestros clasificadores para entrenar y validar los modelos: X_train_cols, X_test_cols, y_train_cols, y_test_cols\n",
+        "\n",
+        "Ahora, haremos la misma división pero con la bolsa de palabras:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 24,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "901406fa",
+        "outputId": "e106cb43-da98-4d0e-e364-2c7fcb5d3626"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Observaciones para entrenamiento (70% de 5572): 2099\n",
+            "Observaciones para prueba (30% de 5572): 900\n"
+          ]
+        }
+      ],
+      "source": [
+        "X_train, X_test, y_train, y_test = train_test_split(\n",
+        "        bow, labels, test_size=0.3, random_state=0\n",
+        "        )\n",
+        "\n",
+        "print(\"Observaciones para entrenamiento (70% de 5572): {}\".format(X_train.shape[0]))\n",
+        "print(\"Observaciones para prueba (30% de 5572): {}\".format(X_test.shape[0]))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "097a5111"
+      },
+      "source": [
+        "Por último, usaremos la representación del texto obtenida con TF-IDF."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 25,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "80886ce4",
+        "outputId": "f859e1f1-1f03-4b5a-fb7e-ca59aa0e6db9"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Observaciones para entrenamiento (70% de 5572): 2099\n",
+            "Observaciones para prueba (30% de 5572): 900\n"
+          ]
+        }
+      ],
+      "source": [
+        "X_train_tfidf, X_test_tfidf, y_train_tfidf, y_test_tfidf = train_test_split(\n",
+        "        tf_idf, np.array(labels), test_size=0.3, random_state=0\n",
+        "        )\n",
+        "\n",
+        "print(\"Observaciones para entrenamiento (70% de 5572): {}\".format(X_train_tfidf.shape[0]))\n",
+        "print(\"Observaciones para prueba (30% de 5572): {}\".format(X_test_tfidf.shape[0]))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "f216e200"
+      },
+      "source": [
+        "### Clasificador: Logistic Regression classifier\n",
+        "\n",
+        "Una de las herramientas de clasificación multi-clase más sencilla es el clasificador: [logistic regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html). Scikit-learn ofrece una variedad de algoritmos de ``solvers`` que se utilizan para parametrizar este clasificador, en nuestro caso: [L-BFGS](https://en.wikipedia.org/wiki/Limited-memory_BFGS). "
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "0105c9eb"
+      },
+      "source": [
+        "#### Representación de texto: **Bolsa de Palabras - BoW**\n",
+        "\n",
+        "Primero, usaremos la representación de **Bolsa de Palabras - BoW**:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 26,
+      "metadata": {
+        "id": "11c73934",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "67e1971f-cc4b-4094-d4c9-1fe8a49de749"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/usr/local/lib/python3.9/dist-packages/sklearn/linear_model/_logistic.py:458: ConvergenceWarning: lbfgs failed to converge (status=1):\n",
+            "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.\n",
+            "\n",
+            "Increase the number of iterations (max_iter) or scale the data as shown in:\n",
+            "    https://scikit-learn.org/stable/modules/preprocessing.html\n",
+            "Please also refer to the documentation for alternative solver options:\n",
+            "    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression\n",
+            "  n_iter_i = _check_optimize_result(\n"
+          ]
+        }
+      ],
+      "source": [
+        "lr_model = LogisticRegression(solver='lbfgs')\n",
+        "lr_model.fit(X_train, y_train)\n",
+        "predictions = lr_model.predict(X_test)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 27,
+      "metadata": {
+        "id": "41e0b245",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "79a9651a-eda3-475b-b095-e8a0f5fba5a6"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "array([[752,   0],\n",
+              "       [  8, 140]])"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 27
+        }
+      ],
+      "source": [
+        "# Matriz de confusión\n",
+        "con_mat = metrics.confusion_matrix(y_test, predictions)\n",
+        "con_mat"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 28,
+      "metadata": {
+        "id": "9f06d0e0",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 112
+        },
+        "outputId": "4264ea56-56d8-45ed-b227-4115d04cfbf4"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "         no spam  spam\n",
+              "no spam      752     0\n",
+              "spam           8   140"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-100918ab-c395-4ef8-afdb-360c97362620\">\n",
+              "    <div class=\"colab-df-container\">\n",
+              "      <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>no spam</th>\n",
+              "      <th>spam</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>no spam</th>\n",
+              "      <td>752</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>spam</th>\n",
+              "      <td>8</td>\n",
+              "      <td>140</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "      <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-100918ab-c395-4ef8-afdb-360c97362620')\"\n",
+              "              title=\"Convert this dataframe to an interactive table.\"\n",
+              "              style=\"display:none;\">\n",
+              "        \n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\"viewBox=\"0 0 24 24\"\n",
+              "       width=\"24px\">\n",
+              "    <path d=\"M0 0h24v24H0V0z\" fill=\"none\"/>\n",
+              "    <path d=\"M18.56 5.44l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94zm-11 1L8.5 8.5l.94-2.06 2.06-.94-2.06-.94L8.5 2.5l-.94 2.06-2.06.94zm10 10l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94z\"/><path d=\"M17.41 7.96l-1.37-1.37c-.4-.4-.92-.59-1.43-.59-.52 0-1.04.2-1.43.59L10.3 9.45l-7.72 7.72c-.78.78-.78 2.05 0 2.83L4 21.41c.39.39.9.59 1.41.59.51 0 1.02-.2 1.41-.59l7.78-7.78 2.81-2.81c.8-.78.8-2.07 0-2.86zM5.41 20L4 18.59l7.72-7.72 1.47 1.35L5.41 20z\"/>\n",
+              "  </svg>\n",
+              "      </button>\n",
+              "      \n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      flex-wrap:wrap;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "      <script>\n",
+              "        const buttonEl =\n",
+              "          document.querySelector('#df-100918ab-c395-4ef8-afdb-360c97362620 button.colab-df-convert');\n",
+              "        buttonEl.style.display =\n",
+              "          google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "        async function convertToInteractive(key) {\n",
+              "          const element = document.querySelector('#df-100918ab-c395-4ef8-afdb-360c97362620');\n",
+              "          const dataTable =\n",
+              "            await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                     [key], {});\n",
+              "          if (!dataTable) return;\n",
+              "\n",
+              "          const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "            '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "            + ' to learn more about interactive tables.';\n",
+              "          element.innerHTML = '';\n",
+              "          dataTable['output_type'] = 'display_data';\n",
+              "          await google.colab.output.renderOutput(dataTable, element);\n",
+              "          const docLink = document.createElement('div');\n",
+              "          docLink.innerHTML = docLinkHtml;\n",
+              "          element.appendChild(docLink);\n",
+              "        }\n",
+              "      </script>\n",
+              "    </div>\n",
+              "  </div>\n",
+              "  "
+            ]
+          },
+          "metadata": {},
+          "execution_count": 28
+        }
+      ],
+      "source": [
+        "# Matriz de confusión en un dataframe\n",
+        "df = pd.DataFrame(con_mat, index=['no spam','spam'], columns=['no spam','spam'])\n",
+        "df"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "59c2c45b",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "c6391ab2-2288-4bea-9f86-f17bbe3c82c2"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "0.9814593301435407\n"
+          ]
+        }
+      ],
+      "source": [
+        "print(metrics.accuracy_score(y_test,predictions))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "0e365303"
+      },
+      "source": [
+        "En este caso, el accuracy mejoró un poco más, llegó hasta: **98.1%**  (BoW + LogisticRegression)."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "82aab1da"
+      },
+      "source": [
+        "#### Representación de texto: **TF-IDF**\n",
+        "\n",
+        "A continuación, usaremos la representación obtenida con **TF-IDF** y el clasificador LogisticRegression:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 30,
+      "metadata": {
+        "id": "cd4e2ecd"
+      },
+      "outputs": [],
+      "source": [
+        "lr_model = LogisticRegression(solver='lbfgs')\n",
+        "lr_model.fit(X_train_tfidf, y_train_tfidf)\n",
+        "predictions = lr_model.predict(X_test_tfidf)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 31,
+      "metadata": {
+        "id": "b2bd3f66",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "8956b876-1c0d-4d83-dbc8-35403af80785"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[[752   0]\n",
+            " [ 44 104]]\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Matriz de confusión\n",
+        "con_mat = metrics.confusion_matrix(y_test_tfidf, predictions)\n",
+        "print(con_mat)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 33,
+      "metadata": {
+        "id": "028582d9",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "435d91ba-0b9b-402f-d820-c77a75d65573"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "0.9511111111111111\n"
+          ]
+        }
+      ],
+      "source": [
+        "print(metrics.accuracy_score(y_test_tfidf, predictions))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "fb0f25a9"
+      },
+      "source": [
+        "En este caso, bajó un poco el desempeño, el accuracy fue: **95.1%**  (TF-IDF + LogisticRegression)."
+      ]
+    }
+  ]
+}
